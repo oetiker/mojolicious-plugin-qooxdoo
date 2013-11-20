@@ -1,0 +1,14 @@
+language: perl
+
+perl:
+  - "5.19"
+  - "5.18"
+  - "5.16"
+  - "5.14"
+  - "5.8"
+
+script:
+  - perl Makefile.PL
+  - ./setup/build-perl-modules.sh `pwd`/thirdparty
+  - make
+  - make test

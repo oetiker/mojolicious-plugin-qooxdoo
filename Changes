@@ -1,0 +1,5 @@
+Revision history for Mojolicious::Pugin::Qooxdoo
+
+0.1   2013-11-20
+  - Rewrite of MojoX::Dispatcher::Qooxdoo::Jsonrpc into a Controller centric object
+

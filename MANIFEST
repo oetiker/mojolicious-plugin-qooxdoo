@@ -1,0 +1,12 @@
+Changes
+example/bin/server.pl
+example/lib/QxExample.pm
+example/lib/QxExample/JsonRpcService.pm
+lib/Mojolicious/Plugin/Qooxdoo.pm
+lib/Mojolicious/Plugin/Qooxdoo/JsonRpcController.pm
+setup/build-perl-modules.sh
+setup/sdbs.inc
+Makefile.PL
+MANIFEST
+README
+t/simple.t
