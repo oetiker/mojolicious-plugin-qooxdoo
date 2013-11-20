@@ -1,10 +1,11 @@
+use FindBin;
+use lib $FindBin::Bin.'/../thirdparty/lib/perl5';
+use lib $FindBin::Bin.'/../lib';
+use lib $FindBin::Bin.'/../example/lib';
+
 use Test::More tests => 27;
 use Test::Mojo;
 
-use FindBin;
-use lib $FindBin::Bin.'/../lib';
-use lib $FindBin::Bin.'/../example/lib';
-use lib $FindBin::Bin.'/../thirdparty/lib/perl5';
 
 use_ok 'Mojolicious::Plugin::Qooxdoo';
 use_ok 'Mojolicious::Plugin::Qooxdoo::JsonRpcController';
