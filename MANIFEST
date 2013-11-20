@@ -8,5 +8,5 @@ setup/build-perl-modules.sh
 setup/sdbs.inc
 Makefile.PL
 MANIFEST
-README
+README.md
 t/simple.t

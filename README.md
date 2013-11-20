@@ -1,26 +1,30 @@
-Mojolicious::Plugin::Qooxdoo.pm 
--------------------------------
+Mojolicious::Plugin::Qooxdoo
+============================
 
 Qooxdoo JSON-RPC support for the Mojolicious Perl framework.
 
-Installation
-------------
+[![Build Status](https://travis-ci.org/oetiker/mojolicious-plugin-qooxdoo.png?branch=master)](https://travis-ci.org/oetiker/mojolicious-plugin-qooxdoo)
 
-  perl Makefile.PL
-  make
-  make install
+### Installation
+
+```shell
+
+        perl Makefile.PL
+        make
+        make install
 
 Since this module requires Mojolicious to work. I have provided
 a little script to install a copy locally. This is especially
 useful for testing.
 
-  ./setup/build-perl-modules.sh `pwd`/thirdparty
-  make test
+```shell
+        ./setup/build-perl-modules.sh `pwd`/thirdparty
+        make test
 
-Thanks
-------
+### Thanks
+
 This module is build upon  MojoX::Dispatcher::Qooxdoo::Jsonrpc.
-Thank you Matthias Bloch (https://github.com/maettu) for makeing it
+Thanks to Matthias Bloch (matthias at puffin ch) for makeing it
 available!
 
 
