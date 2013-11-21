@@ -26,7 +26,9 @@ the given method.
 has service => sub { 'rpc' };
 
 our %allow_access =  (
-    echo => 1
+    echo => 1,
+    async => 1,
+    asyncException => 1,
 );
 
 sub allow_rpc_access {
@@ -47,7 +49,31 @@ sub echo {
     return $arg;
 }
 
+=head2 async(var)
+
+return the answer with a 1 second delay
+
+=cut
+
+sub async {
+    my $self = shift;
+    my $text = shift;
+    $self->render_later;
+    Mojo::IOLoop->timer('1.5' => sub {
+        $self->renderJsonRpcResult("Delayed $text for 1.5 seconds!");
+    });
+}
+
+sub asyncException {
+    my $self = shift;
+    $self->render_later;
+    Mojo::IOLoop->timer('1' => sub {
+         $self->renderJsonRpcError(QxExample::Exception->new(code=>334, message=>"a simple error"));
+    });
+}
+
 package QxExample::Exception;
+
 use Mojo::Base -base;
 has 'code';
 has 'message';

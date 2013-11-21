@@ -8,20 +8,26 @@ use Mojo::Base 'Mojolicious::Controller';
 use Encode;
 
 
-our $toUTF8 = find_encoding('utf8');
+has toUTF8 => sub { find_encoding('utf8') };
 
-our $VERSION = '0.2';
+our $VERSION = '0.3';
 
-has 'JSON' => sub { Mojo::JSON->new };
+has JSON => sub { Mojo::JSON->new };
 
 has 'service';
+
+has 'crossDomain';
+has 'requestId';
+has 'methodName';
+
+has log => sub { shift->app->log };
 
 sub dispatch {
     my $self = shift;
     
     # We have to differentiate between POST and GET requests, because
     # the data is not sent in the same place..
-    my $log = $self->app->log;
+    my $log = $self->log;
 
     my $json = $self->JSON;
 
@@ -32,44 +38,41 @@ sub dispatch {
         @_ = ($log, $message);
         goto &Mojo::Log::warn;
     };
-    my $id;    
     my $data;
-    my $cross_domain;
     for ( $self->req->method ){
         /^POST$/ && do {
             # Data comes as JSON object, so fetch a reference to it
-            $data           = $json->decode($self->req->body) or 
-	    do {
-		my $error = "Invalid json string: " . $json->error;
-		$log->error($error);
-		$self->render(text => $error, status=>500);
-		return;
-	    };
-            $id             = $data->{id};
-            $cross_domain   = 0;
-            next;
+            $data = $json->decode($self->req->body) or 
+	    	do {
+				my $error = "Invalid json string: " . $json->error;
+				$log->error($error);
+				$self->render(text => $error, status=>500);
+				return;
+	    	};
+            $self->requestId($data->{id});
+            $self->crossDomain(0);
+            last;
         };
         /^GET$/ && do {
             $data= $json->decode(
                 $self->param('_ScriptTransport_data')
-            ) or
-	    do {
-		my $error = "Invalid json string: " . $json->error;
-		$log->error($error);
-		$self->render(text => $error, status=>500);
-		return;
-	    };
+            ) or do {
+				my $error = "Invalid json string: " . $json->error;
+				$log->error($error);
+				$self->render(text => $error, status=>500);
+				return;
+	    	};
 
-            $id = $self->param('_ScriptTransport_id') ;
-            $cross_domain   = 1;
-            next;
+            $self->requestId($self->param('_ScriptTransport_id')) ;
+            $self->crossDomain(1);
+            last;
         };
         my $error = "request must be POST or GET. Can't handle '".$self->req->method."'";
         $log->error($error);
         $self->render(text => $error, status=>500);
         return;
     }        
-    if (not defined $id){
+    if (not defined $self->requestId){
         my $error = "Missing 'id' property in JsonRPC request.";
         $log->error($error);
         $self->render(text => $error, status=>500);
@@ -92,11 +95,12 @@ sub dispatch {
         $self->render(text => $error, status=>500);
         return;
     };
-    
+    $self->methodName($method);
+
     my $params  = $data->{params} || []; # is a reference, so "unpack" it
  
     # invocation of method in class according to request 
-    my $reply = eval{
+    my $reply = eval {
         # make sure there are not foreign signal handlers
         # messing with our problems
         local $SIG{__DIE__};
@@ -133,51 +137,70 @@ sub dispatch {
         no strict 'refs';
         $self->$method(@$params);
     };
-       
-    if ($@){ 
-        my $error;
-        for (ref $@){
-            /HASH/ && $@->{message} && do {
-                $error = {
-                     origin => $@->{origin} || 2, 
-                     message => $@->{message}, 
-                     code=>$@->{code}
-                };
-                last;
-            };
-            /.+/ && $@->can('message') && $@->can('code') && do {
-                $error = {
-                      origin => 2, 
-                      message => $@->message(), 
-                      code=>$@->code()
-                };
-                last;
-            };
-            $error = {
-                origin => 2, 
-                message => "error while processing ${service}::$method: $@", 
-                code=> 9999
-            };
-        }
-        $reply = $json->encode({ id => $id, error => $error });
-        $log->error("JsonRPC Error $error->{code}: $error->{message}");
+    if ($@){
+        $self->renderJsonRpcError($@);
     }
     else {
-        $reply = $json->encode({ id => $id, result => $reply });
-        $log->debug("return ".$reply);
+    	# do NOT render if
+    	if (not $self->stash->{'mojo.rendered'}){
+    		$self->renderJsonRpcResult($reply);
+    	}
     }
+}
 
-    if ($cross_domain){
+sub renderJsonRpcResult {
+	my $self = shift;
+	my $data = shift;
+    my $reply = $self->JSON->encode({ id => $self->requestId, result => $data });
+    $self->log->debug("return ".$reply);
+    $self->finalizeJsonRpcReply($reply);
+}
+
+sub renderJsonRpcError {
+	my $self = shift;
+	my $exception = shift;
+	my $error;
+	for (ref $exception){
+        /HASH/ && $exception->{message} && do {
+            $error = {
+                origin => $exception->{origin} || 2, 
+                message => $exception->{message}, 
+                code=>$exception->{code}
+            };
+            last;
+        };
+        /.+/ && $exception->can('message') && $exception->can('code') && do {
+            $error = {
+                origin => 2, 
+                message => $exception->message(), 
+                code=>$exception->code()
+            };
+            last;
+        };
+        $error = {
+            origin => 2, 
+            message => "error while processing ".$self->service."::".$self->methodName.": $exception", 
+            code=> 9999
+        };
+    }
+    $self->log->error("JsonRPC Error $error->{code}: $error->{message}");
+    $self->finalizeJsonRpcReply($self->JSON->encode({ id => $self->requestId, error => $error}));
+}
+
+sub finalizeJsonRpcReply {
+	my $self  = shift;
+	my $reply = shift;
+    if ($self->crossDomain){
         # for GET requests, qooxdoo expects us to send a javascript method
         # and to wrap our json a litte bit more
         $self->res->headers->content_type('application/javascript; charset=utf-8');
-        $reply = "qx.io.remote.transport.Script._requestFinished( $id, " . $reply . ");";
+        $reply = "qx.io.remote.transport.Script._requestFinished( ".$self->requestId.", " . $reply . ");";
     } else {
         $self->res->headers->content_type('application/json; charset=utf-8');
     }    
     # the render takes care of encoding the output, so make sure we re-decode
     # the json stuf
-    $self->render(text => $toUTF8->decode($reply));
+    $self->render(text => $self->toUTF8->decode($reply));
 }
 
 1;
@@ -185,7 +208,7 @@ sub dispatch {
 
 =head1 NAME
 
-Mojolicious::Plugin::Qooxdoo::JsonRpcController - A controller base class for Qooxdoo Json Rpc Calls
+Mojolicious::Plugin::Qooxdoo::JsonRpcController - A controller base class for Qooxdoo JSON-RPC Calls
 
 =head1 SYNOPSIS
 
@@ -210,10 +233,12 @@ Mojolicious::Plugin::Qooxdoo::JsonRpcController - A controller base class for Qo
  
  has service => sub { 'Test' };
  
+ out %allow = ( echo => 1, bad =>  1, async => 1);
+
  sub allow_rpc_access {
     my $self = shift;
     my $method = shift;
-    return $method eq 'echo';
+    return $allow{$method};;
  }
 
  sub echo {
@@ -229,6 +254,19 @@ Mojolicious::Plugin::Qooxdoo::JsonRpcController - A controller base class for Qo
     die { code => 1234, message => 'another way to die' };
  }
 
+ sub async {
+    my $self=shift;
+    $self->render_later;
+    xyzWithCallback(callback=>sub{
+        eval {
+            local $SIG{__DIE__};
+            $self->renderJsonRpcResult('Late Reply');
+        }
+        if ($@) {
+            $self->renderJsonRpcError($@);
+        }
+    });
+ }
 
  package MyException;
 
@@ -263,6 +301,14 @@ method to check if rpc access should be allowed.  The result of this request
 is NOT cached, so you can use this method to provide dynamic access control
 or even do initialization tasks that are required before handling each
 request.
+
+=head2 Async Processing
+
+If you want to do asyncronoous data processing, call the C<render_later> method
+to let the dispatcher know that it should not bother with trying to render anyting.
+In the callback, call the C<renderJsonRpcResult> method to render your result. Note
+that you have to take care of any exceptions in the callback yourself and use
+the C<renderJsonRpcError> method to send the exception to the client.
 
 =head1 AUTHOR
 

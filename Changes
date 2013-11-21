@@ -1,5 +1,8 @@
 Revision history for Mojolicious::Pugin::Qooxdoo
 
+0.3   2013-11-21
+  - added support for handling async callbacks
+
 0.2   2013-11-20
   - do not index the example module
 

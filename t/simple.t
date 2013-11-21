@@ -3,7 +3,7 @@ use lib $FindBin::Bin.'/../thirdparty/lib/perl5';
 use lib $FindBin::Bin.'/../lib';
 use lib $FindBin::Bin.'/../example/lib';
 
-use Test::More tests => 27;
+use Test::More tests => 31;
 use Test::Mojo;
 
 
@@ -39,10 +39,16 @@ $t->post_ok('/jsonrpc','{"id":1,"service":"rpc","method":"echo"}')
   ->json_is('',{error=>{origin=>2,code=>123,message=>"Argument Required!"},id=>1},'propagating generic exception');
 
 $t->post_ok('/jsonrpc','{"id":1,"service":"rpc","method":"echo","params":["hello"]}')
-  ->json_is('',{id=>1,result=>'hello'},'proper response');
+  ->json_is('',{id=>1,result=>'hello'},'post request');
+
+$t->post_ok('/jsonrpc','{"id":1,"service":"rpc","method":"async","params":["hello"]}')
+  ->json_is('',{id=>1,result=>'Delayed hello for 1.5 seconds!'},'async request');
+
+$t->post_ok('/jsonrpc','{"id":1,"service":"rpc","method":"asyncException","params":[]}')
+  ->json_is('',{id=>1,error=>{origin=>2,code=>334,message=>'a simple error'}},'async exception');
 
 $t->get_ok('/jsonrpc?_ScriptTransport_id=1;_ScriptTransport_data={"id":1,"service":"rpc","method":"echo","params":["hello"]}')
-  ->content_like(qr/qx.io.remote.transport.Script._requestFinished/, 'proper get response')
+  ->content_like(qr/qx.io.remote.transport.Script._requestFinished/, 'get request')
   ->content_type_is('application/javascript; charset=utf-8')
   ->status_is(200);
 
