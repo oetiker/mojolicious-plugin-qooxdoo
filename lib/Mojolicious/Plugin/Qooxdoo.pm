@@ -12,7 +12,6 @@ sub register {
     # Config
     $conf ||= {};
     my $root = ($conf->{prefix} || '') . '/';
-    my $services = $conf->{services};
     my $path = $conf->{path} || 'jsonrpc';
     my $r = $app->routes;
 
