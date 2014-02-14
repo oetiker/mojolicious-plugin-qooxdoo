@@ -47,7 +47,7 @@ $t->post_ok('/jsonrpc','{"id":1,"service":"rpc","method":"async","params":["hell
 $t->post_ok('/jsonrpc','{"id":1,"service":"rpc","method":"asyncException","params":[]}')
   ->json_is('',{id=>1,error=>{origin=>2,code=>334,message=>'a simple error'}},'async exception');
 
-$t->get_ok('/jsonrpc?_ScriptTransport_id=1;_ScriptTransport_data={"id":1,"service":"rpc","method":"echo","params":["hello"]}')
+$t->get_ok('/jsonrpc?_ScriptTransport_id=1&_ScriptTransport_data={"id":1,"service":"rpc","method":"echo","params":["hello"]}')
   ->content_like(qr/qx.io.remote.transport.Script._requestFinished/, 'get request')
   ->content_type_is('application/javascript; charset=utf-8')
   ->status_is(200);
