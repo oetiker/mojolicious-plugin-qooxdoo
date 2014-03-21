@@ -3,7 +3,7 @@ use lib $FindBin::Bin.'/../thirdparty/lib/perl5';
 use lib $FindBin::Bin.'/../lib';
 use lib $FindBin::Bin.'/../example/lib';
 
-use Test::More tests => 31;
+use Test::More tests => 33;
 use Test::Mojo;
 
 
@@ -12,6 +12,8 @@ use_ok 'Mojolicious::Plugin::Qooxdoo::JsonRpcController';
 use_ok 'QxExample';
 
 my $t = Test::Mojo->new('QxExample');
+
+$t->get_ok('/asdfasdf')->status_is(404);
 
 $t->post_ok('/jsonrpc','{"hello": dummy}')
   ->content_like(qr/Invalid json string: Malformed JSON/,'bad request identified')

@@ -1,4 +1,7 @@
 Revision history for Mojolicious::Pugin::Qooxdoo
+0.5   2014-03-21
+  - plugin unecessarily installed a catch all rule messing with the file not
+    found handling
 
 0.4   2014-02-14
   - mojo 4.80 does not recognize ; as query separator anymore ... fix tests
