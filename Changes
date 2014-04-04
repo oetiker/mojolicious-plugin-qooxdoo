@@ -1,5 +1,7 @@
 Revision history for Mojolicious::Pugin::Qooxdoo
 
+0.6   2014-04-04
+  - fixed regression in the index file redirection
   - improved documentation consistency
 
 0.5   2014-03-21

@@ -71,8 +71,9 @@ sub register {
     else {
         # redirect root to index.html
         $r->get($root => sub {
-             $self->req->url->path('/index.html');
-             return $app->static->dispatch($self);
+            my $self = shift;
+            $self->req->url->path('/index.html');
+            return $app->static->dispatch($self);
         });
      }
 }
@@ -89,7 +90,7 @@ Mojolicious::Plugin::Qooxdoo - System for writing Qooxdoo backend code with Mojo
 
  # lib/your-application.pm
 
- use base 'Mojolicious';
+ use Mojo::Base 'Mojolicious';
  use MyJsonRpcController;
  
  sub startup {
