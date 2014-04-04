@@ -279,15 +279,15 @@ Mojolicious::Plugin::Qooxdoo::JsonRpcController - A controller base class for Qo
 
 All you have todo to process incoming JSON-RPC requests from a qooxdoo
 application, is to make your controller a child of
-L<Mojolicious::Plugin::Qooxdoo::JsonRpcService>.  And then route all
+L<Mojolicious::Plugin::Qooxdoo::JsonRpcController>.  And then route all
 incoming requests to the inherited dispatch method in the new controller.
 
 If you want your Mojolicious app to also serve the qooxdoo application
-files, you can use L<Mojolicous::Plugin::Qooxdoo> to have everyting setup for you.
+files, you can use L<Mojolicous::Plugin::Qooxdoo> to have everything setup for you.
 
 =head2 Exception processing
 
-Errors within the methods of your RpcService are handled by an eval call,
+Errors within the methods of your controller are handled by an eval call,
 encapsulating the method call.  So if you run into trouble, just C<die>.  If
 if you die with a object providing a C<code> and C<message> property or with
 a hash containing a C<code> and C<message> key, this information will be
@@ -296,7 +296,7 @@ used to populate the JSON-RPC error object returned to the caller.
 =head2 Security
 
 The C<dispatcher> method provided by
-L<Mojolicious::Plugin::Qooxoo::JsonRpcService> calls the C<allow_rpc_access>
+L<Mojolicious::Plugin::Qooxoo::JsonRpcController> calls the C<allow_rpc_access>
 method to check if rpc access should be allowed.  The result of this request
 is NOT cached, so you can use this method to provide dynamic access control
 or even do initialization tasks that are required before handling each

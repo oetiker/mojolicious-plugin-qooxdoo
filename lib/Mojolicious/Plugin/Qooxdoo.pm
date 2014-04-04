@@ -90,7 +90,7 @@ Mojolicious::Plugin::Qooxdoo - System for writing Qooxdoo backend code with Mojo
  # lib/your-application.pm
 
  use base 'Mojolicious';
- use RpcService;
+ use MyJsonRpcController;
  
  sub startup {
     my $self = shift;
@@ -98,18 +98,18 @@ Mojolicious::Plugin::Qooxdoo - System for writing Qooxdoo backend code with Mojo
     $self->plugin('qooxdoo',{
         prefix => '/',
         path => 'jsonrpc',
-        controller => 'rpc_service'
+        controller => 'my_json_rpc_conroller'
     });
  }
 
 
 =head1 DESCRIPTION
 
-To deal with incoming JSON-RPC requests, write a controller decending from L<Mojolicious::Plugin::Qooxdoo::JsonRpc>
-instead of the normal L<Mojolicious::Controller> class. 
+To deal with incoming JSON-RPC requests, write a controller using L<Mojolicious::Plugin::Qooxdoo::JsonRpcController>
+as a parent, instead of the normal L<Mojolicious::Controller> class.
 
-See the documentation on L<Mojolicious::Plugin::Qooxdoo::Jsonrpc>
-for details on how to write your service. 
+See the documentation in L<Mojolicious::Plugin::Qooxdoo::JsonRpcController>
+for details on how to write a qooxdoo json rpc controller. 
 
 The plugin understands the following parameters.
 
@@ -122,13 +122,13 @@ you can move them down the tree.
 
 =item B<controller>
 
-The name of your RpcService controller class. See L<Mojolicious::Plugin::Qooxdoo::JsonRpc> for details on how
+The name of your RpcService controller class. See L<Mojolicious::Plugin::Qooxdoo::JsonRpcController> for details on how
 to write a service. If no controller argument is specified, the plugin will only install the routes
 necessary to server the qooxdoo javascript files and assets.
 
 =item B<namespace>
 
-If your controller class is NOT under the application namespace.
+If your controller class does not reside in the the application namespace.
 
 =item B<path> (default: jsonrpc)
 
@@ -147,7 +147,7 @@ version of your application. Set the C<QX_SRC_MODE> environment variable to
 "1" to activate the source mode. By default, the module expects to find the
 source of your application in F<MOJO_HOME/../frontend/source> if you keep
 the source somewhere else you can set the alternate location via
-C<QX_SRC_PATH> either absolute or relative to the MOJO_HOME directory.
+C<QX_SRC_PATH> either absolute or relative to the C<MOJO_HOME> directory.
 
 In production mode, the plugin expects to find the result of your
 C<generate.py build> run in mojos F<public> directory. 
