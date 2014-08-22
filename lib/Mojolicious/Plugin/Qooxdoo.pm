@@ -34,10 +34,10 @@ sub register {
         my %prefixCache;
         my $static = Mojolicious::Static->new();
         my $static_cb = sub {
-            my $self = shift;
-            my $prefix = $self->param('prefix');    
-            if ($self->param('file')){
-                $self->req->url->path('/'.$prefix.'/'.$self->param('file'));
+            my $ctrl = shift;
+            my $prefix = $ctrl->param('prefix');    
+            if ($ctrl->param('file')){
+                $ctrl->req->url->path('/'.$prefix.'/'.$ctrl->param('file'));
             }
             if (not defined $prefixCache{$prefix}){
                 my $prefix_local = catdir(split /\//, $prefix);
@@ -52,8 +52,8 @@ sub register {
             } 
             $static->paths([$prefixCache{$prefix}]);
 
-            unless ($static->dispatch($self)){
-                $self->render(text=>$self->req->url->path.' not found', status => 404);
+            unless ($static->dispatch($ctrl)){
+                $ctrl->render(text=>$ctrl->req->url->path.' not found', status => 404);
             }
         };
 
@@ -71,9 +71,9 @@ sub register {
     else {
         # redirect root to index.html
         $r->get($root => sub {
-            my $self = shift;
-            $self->req->url->path('/index.html');
-            return $app->static->dispatch($self);
+            my $ctrl = shift;
+            $ctrl->req->url->path('/index.html');
+            return $app->static->dispatch($ctrl);
         });
      }
 }
