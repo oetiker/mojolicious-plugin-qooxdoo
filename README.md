@@ -4,6 +4,7 @@ Mojolicious::Plugin::Qooxdoo
 Qooxdoo JSON-RPC support for the Mojolicious Perl framework.
 
 [![Build Status](https://travis-ci.org/oetiker/Mojolicious-Plugin-Qooxdoo.png?branch=master)](https://travis-ci.org/oetiker/Mojolicious-Plugin-Qooxdoo)
+[![Coverage Status](https://coveralls.io/repos/oetiker/Mojolicious-Plugin-Qooxdoo/badge.png)](https://coveralls.io/r/oetiker/Mojolicious-Plugin-Qooxdoo)
 
 Installation
 ------------
