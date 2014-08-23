@@ -6,7 +6,11 @@ use Mojo::Base 'Mojolicious';
 
 sub startup {
     my $self = shift;
-    $self->routes->route('/jsonrpc')->to('JsonRpcService#dispatch');
+    $self->plugin('qooxdoo',{
+        prefix => '/root',
+        path => 'jsonrpc',
+        controller => 'JsonRpcService'
+    });
 }
 
 1;
