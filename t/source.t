@@ -3,7 +3,7 @@ use lib $FindBin::Bin.'/../thirdparty/lib/perl5';
 use lib $FindBin::Bin.'/../lib';
 use lib $FindBin::Bin.'/../example/lib';
 
-use Test::More tests => 3;
+use Test::More tests => 4;
 use Test::Mojo;
 
 use_ok 'QxExample';
