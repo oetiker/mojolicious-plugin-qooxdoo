@@ -1,5 +1,8 @@
 Revision history for Mojolicious::Pugin::Qooxdoo
 
+0.8   2014-08-23
+  - added missing example file
+
 0.7   2014-08-23
   - fix prefix handling
 
