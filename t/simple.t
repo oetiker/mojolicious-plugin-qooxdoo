@@ -3,7 +3,7 @@ use lib $FindBin::Bin.'/../thirdparty/lib/perl5';
 use lib $FindBin::Bin.'/../lib';
 use lib $FindBin::Bin.'/../example/lib';
 
-use Test::More tests => 36;
+use Test::More tests => 42;
 use Test::Mojo;
 
 
@@ -19,6 +19,10 @@ $t->get_ok('/root/demo.txt')
   ->content_like(qr/DemoText/)
   ->status_is(200);
 
+
+$t->put_ok('/root/jsonrpc','{"hello": dummy}')
+  ->content_like(qr/request must be POST or GET/,'request must be post or get')
+  ->status_is(500);
 
 $t->post_ok('/root/jsonrpc','{"hello": dummy}')
   ->content_like(qr/Invalid json string: Malformed JSON/,'bad request identified')
@@ -53,6 +57,10 @@ $t->post_ok('/root/jsonrpc','{"id":1,"service":"rpc","method":"async","params":[
 
 $t->post_ok('/root/jsonrpc','{"id":1,"service":"rpc","method":"asyncException","params":[]}')
   ->json_is('',{id=>1,error=>{origin=>2,code=>334,message=>'a simple error'}},'async exception');
+
+$t->get_ok('/root/jsonrpc?_ScriptTransport_id=1&_ScriptTransport_data="id":1,"service":"rpc","method":"echo","params":["hello"]}')
+  ->content_like(qr/Invalid json/, 'invalid json get request')
+  ->status_is(500);
 
 $t->get_ok('/root/jsonrpc?_ScriptTransport_id=1&_ScriptTransport_data={"id":1,"service":"rpc","method":"echo","params":["hello"]}')
   ->content_like(qr/qx.io.remote.transport.Script._requestFinished/, 'get request')
