@@ -2,6 +2,8 @@ Changes
 example/bin/server.pl
 example/lib/QxExample.pm
 example/lib/QxExample/JsonRpcService.pm
+example/public/demo.txt
+example/source/index.html
 lib/Mojolicious/Plugin/Qooxdoo.pm
 lib/Mojolicious/Plugin/Qooxdoo/JsonRpcController.pm
 setup/build-perl-modules.sh
@@ -10,4 +12,4 @@ Makefile.PL
 MANIFEST
 README
 t/simple.t
-
+t/source.t
