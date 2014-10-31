@@ -10,7 +10,7 @@ use Encode;
 
 has toUTF8 => sub { find_encoding('utf8') };
 
-our $VERSION = '0.10';
+our $VERSION = '0.9.1';
 
 has 'service';
 
