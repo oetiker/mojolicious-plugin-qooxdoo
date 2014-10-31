@@ -3,16 +3,14 @@ package Mojolicious::Plugin::Qooxdoo::JsonRpcController;
 use strict;
 use warnings;
 
-use Mojo::JSON;
+use Mojo::JSON qw(encode_json decode_json);
 use Mojo::Base 'Mojolicious::Controller';
 use Encode;
 
 
 has toUTF8 => sub { find_encoding('utf8') };
 
-our $VERSION = '0.9';
-
-has JSON => sub { Mojo::JSON->new };
+our $VERSION = '0.10';
 
 has 'service';
 
@@ -29,8 +27,6 @@ sub dispatch {
     # the data is not sent in the same place..
     my $log = $self->log;
 
-    my $json = $self->JSON;
-
     # send warnings to log file preserving the origin
     local $SIG{__WARN__} = sub {
         my  $message = shift;
@@ -42,9 +38,9 @@ sub dispatch {
     for ( $self->req->method ){
         /^POST$/ && do {
             # Data comes as JSON object, so fetch a reference to it
-            $data = $json->decode($self->req->body) or 
-	    	do {
-				my $error = "Invalid json string: " . $json->error;
+            $data = eval { decode_json($self->req->body) };
+	    	if ($@) {
+				my $error = "Invalid json string: " . $@;
 				$log->error($error);
 				$self->render(text => $error, status=>500);
 				return;
@@ -54,10 +50,11 @@ sub dispatch {
             last;
         };
         /^GET$/ && do {
-            $data= $json->decode(
-                $self->param('_ScriptTransport_data')
-            ) or do {
-				my $error = "Invalid json string: " . $json->error;
+
+            $data= eval { decode_json($self->param('_ScriptTransport_data')) };
+
+            if ($@) {
+				my $error = "Invalid json string: " . $@;
 				$log->error($error);
 				$self->render(text => $error, status=>500);
 				return;
@@ -67,6 +64,7 @@ sub dispatch {
             $self->crossDomain(1);
             last;
         };
+
         my $error = "request must be POST or GET. Can't handle '".$self->req->method."'";
         $log->error($error);
         $self->render(text => $error, status=>500);
@@ -132,7 +130,7 @@ sub dispatch {
              code=> 4
         } if not $self->can($method);
 
-        $log->debug("call $method(".$json->encode($params).")");
+        $log->debug("call $method(".encode_json($params).")");
         # reply
         no strict 'refs';
         $self->$method(@$params);
@@ -151,7 +149,7 @@ sub dispatch {
 sub renderJsonRpcResult {
 	my $self = shift;
 	my $data = shift;
-    my $reply = $self->JSON->encode({ id => $self->requestId, result => $data });
+    my $reply = encode_json({ id => $self->requestId, result => $data });
     $self->log->debug("return ".$reply);
     $self->finalizeJsonRpcReply($reply);
 }
@@ -184,7 +182,7 @@ sub renderJsonRpcError {
         };
     }
     $self->log->error("JsonRPC Error $error->{code}: $error->{message}");
-    $self->finalizeJsonRpcReply($self->JSON->encode({ id => $self->requestId, error => $error}));
+    $self->finalizeJsonRpcReply(encode_json({ id => $self->requestId, error => $error}));
 }
 
 sub finalizeJsonRpcReply {

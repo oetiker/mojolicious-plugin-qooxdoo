@@ -11,7 +11,7 @@ WriteMakefile(
   AUTHOR       => 'Tobias Oetiker <tobi@oetiker.ch>',
   LICENSE      => 'artistic_2',
   PREREQ_PM    => {
-    'Mojolicious' => '4.0'
+    'Mojolicious' => '5.0'
   },
   META_MERGE   => {
     requires  => {perl => '5.010001'},
