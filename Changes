@@ -1,4 +1,8 @@
 Revision history for Mojolicious::Pugin::Qooxdoo
+0.902 2015-03-19
+  - only log the first 60 characters of each request unless the 
+    environment variable MOJO_QX_FULL_RPC_DETAILS is set.
+
 0.901 2014-10-31
   - adapt to loosing JSON OO in mojo
 

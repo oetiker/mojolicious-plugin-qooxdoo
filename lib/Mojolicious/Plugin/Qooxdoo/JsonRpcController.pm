@@ -10,7 +10,7 @@ use Encode;
 
 has toUTF8 => sub { find_encoding('utf8') };
 
-our $VERSION = '0.901';
+our $VERSION = '0.902';
 
 has 'service';
 
@@ -129,8 +129,15 @@ sub dispatch {
              message => "method $method does not exist.", 
              code=> 4
         } if not $self->can($method);
-
-        $log->debug("call $method(".encode_json($params).")");
+        if ($log->level eq 'debug'){
+            my $debug = encode_json($params);
+            if (not $ENV{MOJO_QX_FULL_RPC_DETAILS}){
+                if (length($debug) > 60){
+                    $debug = substr($debug,0,60) . ' [...]';
+                }
+            }
+            $log->debug("call $method(".$debug.")");
+        }
         # reply
         no strict 'refs';
         $self->$method(@$params);
@@ -150,7 +157,15 @@ sub renderJsonRpcResult {
 	my $self = shift;
 	my $data = shift;
     my $reply = encode_json({ id => $self->requestId, result => $data });
-    $self->log->debug("return ".$reply);
+    if ($self->log->level eq 'debug'){
+        my $debug = $reply;
+        if (not $ENV{MOJO_QX_FULL_RPC_DETAILS}){
+            if (length($debug) > 60){
+               $debug = substr($debug,0,60) . ' [...]';
+            }
+        }
+        $self->log->debug("return ".$reply);
+    }
     $self->finalizeJsonRpcReply($reply);
 }
 
@@ -307,6 +322,13 @@ to let the dispatcher know that it should not bother with trying to render anyti
 In the callback, call the C<renderJsonRpcResult> method to render your result. Note
 that you have to take care of any exceptions in the callback yourself and use
 the C<renderJsonRpcError> method to send the exception to the client.
+
+=head2 Debugging
+
+To see full details of your rpc request and the answers sent back to the
+browser in your debug log, set the MOJO_QX_FULL_RPC_DETAILS environment
+variable to 1.  Otherwise you will only see the first 60 characters even
+when logging at debug level.
 
 =head1 AUTHOR
 
