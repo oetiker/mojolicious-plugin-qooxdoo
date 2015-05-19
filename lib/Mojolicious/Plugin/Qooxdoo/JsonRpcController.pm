@@ -10,7 +10,7 @@ use Encode;
 
 has toUTF8 => sub { find_encoding('utf8') };
 
-our $VERSION = '0.902';
+our $VERSION = '0.903';
 
 has 'service';
 
@@ -164,7 +164,7 @@ sub renderJsonRpcResult {
                $debug = substr($debug,0,60) . ' [...]';
             }
         }
-        $self->log->debug("return ".$reply);
+        $self->log->debug("return ".$debug);
     }
     $self->finalizeJsonRpcReply($reply);
 }
