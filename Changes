@@ -1,4 +1,11 @@
 Revision history for Mojolicious::Pugin::Qooxdoo
+
+0.904 2015-08-22
+  - don't timeout when trying to open non existing file
+
+0.903 2015-07-16
+  - fix debug output regression from 0.902
+
 0.902 2015-03-19
   - only log the first 60 characters of each request unless the 
     environment variable MOJO_QX_FULL_RPC_DETAILS is set.

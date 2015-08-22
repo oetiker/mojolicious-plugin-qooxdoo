@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use File::Spec::Functions qw(splitdir updir catdir file_name_is_absolute);
 use Cwd qw(abs_path);
 
-our $VERSION = '0.903';
+our $VERSION = '0.904';
 
 sub register {
     my ($self, $app, $conf) = @_;
@@ -70,13 +70,18 @@ sub register {
     }
     else {
         # redirect root to index.html
-        $r->get($root.'(*file)' => {file => 'index.html' } => sub {
-             my $self = shift;
-             my $file = $self->param('file');
-             $self->req->url->path('/'.$file);
-             return $app->static->dispatch($self);
-        });
-     }
+        $r->any('/' => sub { shift->reply->static('index.html')});
+        if ($root ne '/'){
+            $app->hook(before_dispatch => sub {
+                my $self = shift;
+                my $file = $self->req->url->path->to_string;
+                if ($file =~ s{^$root/*}{} and -r $app->home->rel_file('public/'.$file)){
+                    $self->req->url->path('/'.$file);
+                    return $app->static->dispatch($self);
+                }
+           });
+        }
+    }
 }
 
 1;

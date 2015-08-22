@@ -3,7 +3,7 @@ use lib $FindBin::Bin.'/../thirdparty/lib/perl5';
 use lib $FindBin::Bin.'/../lib';
 use lib $FindBin::Bin.'/../example/lib';
 
-use Test::More tests => 42;
+use Test::More;
 use Test::Mojo;
 
 
@@ -14,6 +14,9 @@ use_ok 'QxExample';
 my $t = Test::Mojo->new('QxExample');
 
 $t->get_ok('/asdfasdf')->status_is(404);
+
+$t->get_ok('/root/unknown.txt')
+  ->status_is(404);
 
 $t->get_ok('/root/demo.txt')
   ->content_like(qr/DemoText/)
@@ -67,5 +70,6 @@ $t->get_ok('/root/jsonrpc?_ScriptTransport_id=1&_ScriptTransport_data={"id":1,"s
   ->content_type_is('application/javascript; charset=utf-8')
   ->status_is(200);
 
+done_testing();
 
 exit 0;
