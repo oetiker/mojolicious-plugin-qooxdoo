@@ -1,5 +1,8 @@
 Revision history for Mojolicious::Pugin::Qooxdoo
 
+0.905 2017-02-24
+  - replace deprecated rel_dir with rel_file
+
 0.904 2015-08-22
   - don't timeout when trying to open non existing file
 
