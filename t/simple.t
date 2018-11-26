@@ -28,7 +28,7 @@ $t->put_ok('/root/jsonrpc','{"hello": dummy}')
   ->status_is(500);
 
 $t->post_ok('/root/jsonrpc','{"hello": dummy}')
-  ->content_like(qr/Invalid json string: Malformed JSON/,'bad request identified')
+  ->content_like(qr/Invalid json string/i,'bad request identified')
   ->status_is(500);
 
 $t->post_ok('/root/jsonrpc','{"ID":1,"method":"test"}')
