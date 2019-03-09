@@ -13,7 +13,7 @@ use Encode;
 
 has toUTF8 => sub { find_encoding('utf8') };
 
-our $VERSION = '1.0.4';
+our $VERSION = '1.0.5';
 
 has 'service';
 
@@ -136,13 +136,12 @@ sub dispatch {
              message => "method $method does not exist.", 
              code=> 4
         } if not $self->can($method);
+
         $self->logRpcCall($method,dclone($self->rpcParams));
         
-            
-        }
         # reply
         no strict 'refs';
-        return $self->$method(@$self->rpcParams);
+        return $self->$method(@{$self->rpcParams});
     };
     if ($@){
         $self->renderJsonRpcError($@);
@@ -180,7 +179,7 @@ sub logRpcCall {
                 $request = substr($request,0,60) . ' [...]';
             }
         }
-        $log->debug("call $method(".$request.")");
+        $self->log->debug("call $method(".$request.")");
     }
 }
 
@@ -189,7 +188,7 @@ sub renderJsonRpcResult {
 	my $data = shift;
     my $reply = { id => $self->requestId, result => $data };
     $self->logRpcReturn(dclone($reply));
-    $self->finalizeJsonRpcReply(encode_json($reply);
+    $self->finalizeJsonRpcReply(encode_json($reply));
 }
 
 sub logRpcReturn {
