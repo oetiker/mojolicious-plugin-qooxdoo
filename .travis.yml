@@ -8,4 +8,4 @@ before_install:
   cpanm -n Devel::Cover::Report::Coveralls
 
 script:
-  perl Makefile.PL && make thirdparty && make && cover -test -report coveralls +ignore example
+  perl Makefile.PL && make thirdparty && make && cover -test -report coveralls +ignore example +ignore thirdparty
