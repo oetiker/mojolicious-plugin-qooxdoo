@@ -3,8 +3,6 @@ language: perl
 perl:
   - "5.28"
   - "5.22"
-  - "5.16"
-  - "5.10"
 
 before_install:
   cpanm -n Devel::Cover::Report::Coveralls
