@@ -3,11 +3,9 @@ language: perl
 perl:
   - "5.28"
   - "5.22"
-  - "5.16"
-  - "5.10"
 
 before_install:
   cpanm -n Devel::Cover::Report::Coveralls
 
 script:
-  perl Makefile.PL && make && cover -test -report coveralls +ignore example
+  perl Makefile.PL && make thirdparty && make && cover -test -report coveralls +ignore example +ignore thirdparty
