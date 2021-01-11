@@ -1,4 +1,6 @@
-Revision history for Mojolicious::Pugin::Qooxdoo
+1.0.10 2021-01-11 17:14:17 +0100 Tobias Oetiker <tobi@oetiker.ch>
+
+ - use any instead of deprecated route call
 
 1.0.9 2020-11-12
   - only accept post requests with proper content type
