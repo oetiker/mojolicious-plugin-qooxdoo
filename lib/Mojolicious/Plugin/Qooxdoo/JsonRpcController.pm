@@ -13,7 +13,7 @@ use Encode;
 
 has toUTF8 => sub { find_encoding('utf8') };
 
-our $VERSION = '1.0.14';
+our $VERSION = '1.0.15';
 
 has 'service';
 
@@ -400,6 +400,10 @@ browser in your debug log, set the MOJO_QX_FULL_RPC_DETAILS environment
 variable to 1.  Otherwise you will only see the first 60 characters even
 when logging at debug level.
 
+NOTE: At debug log level will log the payload of RPC calls will be logged. This might
+      lead to sensitive data like passwords being logged.
+      You might want to override the logRpc* methods appropriately in your application.
+
 =head1 AUTHOR
 
 S<Matthias Bloch, E<lt>matthias@puffin.chE<gt>>,
@@ -409,7 +413,7 @@ This Module is sponsored by OETIKER+PARTNER AG.
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010,2013
+Copyright (C) 2010,2013,2024
 
 =head1 LICENSE
 
