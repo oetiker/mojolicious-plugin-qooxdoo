@@ -1,3 +1,7 @@
+1.0.15 2024-09-04 23:36:54 +0100 Fritz Zaucker <fritz.zaucker@oetiker.ch>
+
+ - add warning about log level debug
+
 1.0.14 2023-02-28 11:39:54 +0100 Tobias Oetiker <tobi@oetiker.ch>
 
  - do not send raw errors to client only log them
