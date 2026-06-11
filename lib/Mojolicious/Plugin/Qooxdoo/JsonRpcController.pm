@@ -175,10 +175,21 @@ sub dispatch {
         } if not $self->can($method);
 
         $self->logRpcCall($method,dclone($self->rpcParams));
-        
+
         # reply
         no strict 'refs';
-        return $self->$method(@{$self->rpcParams});
+        my $params = $self->rpcParams;
+        if (ref $params eq 'ARRAY') {
+            return $self->$method(@$params);          # positional params
+        }
+        elsif (ref $params eq 'HASH') {
+            return $self->$method($params);           # named params -> single hashref
+        }
+        die {
+            origin  => 1,
+            message => "'params' must be an array or an object",
+            code    => 4
+        };
     };
     if ($@){
         $self->renderJsonRpcError($@);

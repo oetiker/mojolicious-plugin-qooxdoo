@@ -108,6 +108,12 @@ $t->get_ok('/root/jsonrpc?_ScriptTransport_id=1&_ScriptTransport_data={"jsonrpc"
   ->content_like(qr/must be POST/,'2.0 POST-only guard')
   ->status_is(500);
 
+# 2.0 named (object) params are passed to the method as a single hashref
+$t->post_ok('/root/jsonrpc', json => {jsonrpc=>"2.0","id"=>1,"method"=>"echo","params"=>{name=>"bob"}})
+  ->json_is('',{jsonrpc=>"2.0",id=>1,result=>{name=>"bob"}},'2.0 named params reach method as hashref')
+  ->content_type_is('application/json; charset=utf-8')
+  ->status_is(200);
+
 done_testing();
 
 exit 0;
