@@ -98,6 +98,16 @@ $t->post_ok('/root/jsonrpc', json => {jsonrpc=>"2.0","id"=>1,"method"=>"echo","p
   ->json_is('',{jsonrpc=>"2.0",id=>1,error=>{code=>123,message=>"Argument Required!",data=>{origin=>2}}},'2.0 exception envelope')
   ->status_is(200);
 
+# wrong jsonrpc version is rejected
+$t->post_ok('/root/jsonrpc', json => {jsonrpc=>"1.0","id"=>1,"method"=>"echo","params"=>["hi"]})
+  ->content_like(qr/Invalid 'jsonrpc' version/,'2.0 version guard')
+  ->status_is(500);
+
+# 2.0 over GET (Script transport) is rejected
+$t->get_ok('/root/jsonrpc?_ScriptTransport_id=1&_ScriptTransport_data={"jsonrpc":"2.0","id":1,"method":"echo","params":["hi"]}')
+  ->content_like(qr/must be POST/,'2.0 POST-only guard')
+  ->status_is(500);
+
 done_testing();
 
 exit 0;
