@@ -25,6 +25,9 @@ has 'methodName';
 
 has 'rpcParams';
 
+# true when the current request used the JSON-RPC 2.0 envelope
+has 'jsonRpc20';
+
 sub dispatch {
     my $self = shift;
     
@@ -83,6 +86,10 @@ sub dispatch {
         $self->render(text => $error, status=>500);
         return;
     }        
+    # Detect protocol: a 'jsonrpc' member selects strict JSON-RPC 2.0;
+    # its absence keeps the legacy qooxdoo "qx1" behaviour intact.
+    $self->jsonRpc20(defined $data->{jsonrpc} ? 1 : 0);
+
     if (not defined $self->requestId){
         my $error = "Missing 'id' property in JsonRPC request.";
         $log->error($error);
@@ -90,22 +97,46 @@ sub dispatch {
         return;
     }
 
-
-    # Check if service is property is available
-    my $service = $data->{service} or do {
-        my $error = "Missing service property in JsonRPC request.";
-        $log->error($error);
-        $self->render(text => $error, status=>500);
-        return;
-    };
-
-    # Check if method is specified in the request
-    my $method = $data->{method} or do {
-        my $error = "Missing method property in JsonRPC request.";
-        $log->error($error);
-        $self->render(text => $error, status=>500);
-        return;
-    };
+    my $method;
+    if ($self->jsonRpc20) {
+        # --- JSON-RPC 2.0 ---
+        if ($data->{jsonrpc} ne '2.0') {
+            my $error = "Invalid 'jsonrpc' version (must be \"2.0\").";
+            $log->error($error);
+            $self->render(text => $error, status=>500);
+            return;
+        }
+        if ($self->req->method ne 'POST') {
+            my $error = "JSON-RPC 2.0 requests must be POST.";
+            $log->error($error);
+            $self->render(text => $error, status=>500);
+            return;
+        }
+        $method = $data->{method};
+        if (not defined $method) {
+            my $error = "Missing 'method' property in JsonRPC request.";
+            $log->error($error);
+            $self->render(text => $error, status=>500);
+            return;
+        }
+    }
+    else {
+        # --- legacy qx1 ---
+        # Check if service property is available
+        $data->{service} or do {
+            my $error = "Missing service property in JsonRPC request.";
+            $log->error($error);
+            $self->render(text => $error, status=>500);
+            return;
+        };
+        # Check if method is specified in the request
+        $method = $data->{method} or do {
+            my $error = "Missing method property in JsonRPC request.";
+            $log->error($error);
+            $self->render(text => $error, status=>500);
+            return;
+        };
+    }
     $self->methodName($method);
 
     $self->rpcParams($data->{params} // []);
@@ -120,9 +151,9 @@ sub dispatch {
 
         die {
             origin => 1,
-            message => "service $service not available",
+            message => "service ".$data->{service}." not available",
             code=> 2
-        } if not $self->service eq $service;
+        } if not $self->jsonRpc20 and not $self->service eq $data->{service};
 
         die {
              origin => 1, 
@@ -192,7 +223,9 @@ sub logRpcCall {
 sub renderJsonRpcResult {
     my $self = shift;
     my $data = shift;
-    my $reply = { id => $self->requestId, result => $data };
+    my $reply = $self->jsonRpc20
+        ? { jsonrpc => '2.0', id => $self->requestId, result => $data }
+        : {                   id => $self->requestId, result => $data };
     $self->logRpcReturn(dclone($reply));
     $self->finalizeJsonRpcReply(encode_json($reply));
 }

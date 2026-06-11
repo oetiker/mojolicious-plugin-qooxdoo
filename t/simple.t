@@ -80,6 +80,14 @@ $t->get_ok('/root/jsonrpc?_ScriptTransport_id=1&_ScriptTransport_data={"id":1,"s
   ->content_type_is('application/javascript; charset=utf-8')
   ->status_is(200);
 
+# --- JSON-RPC 2.0 ---
+
+# 2.0 positional-params success
+$t->post_ok('/root/jsonrpc', json => {jsonrpc=>"2.0","id"=>1,"method"=>"echo","params"=>["hello"]})
+  ->json_is('',{jsonrpc=>"2.0",id=>1,result=>'hello'},'2.0 success envelope')
+  ->content_type_is('application/json; charset=utf-8')
+  ->status_is(200);
+
 done_testing();
 
 exit 0;
