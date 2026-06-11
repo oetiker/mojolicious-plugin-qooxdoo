@@ -246,33 +246,48 @@ sub logRpcReturn {
 sub renderJsonRpcError {
     my $self = shift;
     my $exception = shift;
-    my $error;
+    my ($origin, $message, $code);
     for (ref $exception){
         /HASH/ && $exception->{message} && do {
-            $error = {
-                origin  => $exception->{origin} || 2,
-                message => $exception->{message}, 
-                code    => $exception->{code}
-            };
+            $origin  = $exception->{origin} // 2;
+            $message = $exception->{message};
+            $code    = $exception->{code};
             last;
         };
         /.+/ && $exception->can('message') && $exception->can('code') && do {
-            $error = {
-                origin  => 2,
-                message => $exception->message(), 
-                code    => $exception->code()
-            };
+            $origin  = 2;
+            $message = $exception->message();
+            $code    = $exception->code();
             last;
         };
-        $self->log->error("Error while processing " . $self->service. "::" . $self->methodName . ": $exception");
-        $error = {
-            origin  => 2,
-            message => "Couldn't process request",
-            code    => 9999
+        $self->log->error("Error while processing " . ($self->service // '') . "::" . $self->methodName . ": $exception");
+        $origin  = 2;
+        $message = "Couldn't process request";
+        $code    = 9999;
+    }
+    $self->log->error("JsonRPC error sent to client: '" . ($code // 'undef') . ": $message'");
+
+    my $reply;
+    if ($self->jsonRpc20) {
+        # JSON-RPC 2.0: error.code must be an integer; non-standard 'origin'
+        # is carried inside the permitted 'data' member.
+        $reply = {
+            jsonrpc => '2.0',
+            id      => $self->requestId,
+            error   => {
+                code    => defined $code ? int($code) : 9999,
+                message => $message,
+                data    => { origin => $origin },
+            },
         };
     }
-    $self->log->error("JsonRPC error sent to client: '$error->{code}: $error->{message}'");
-    $self->finalizeJsonRpcReply(encode_json({ id => $self->requestId, error => $error }));
+    else {
+        $reply = {
+            id    => $self->requestId,
+            error => { origin => $origin || 2, message => $message, code => $code },
+        };
+    }
+    $self->finalizeJsonRpcReply(encode_json($reply));
 }
 
 sub finalizeJsonRpcReply {
