@@ -114,6 +114,16 @@ $t->post_ok('/root/jsonrpc', json => {jsonrpc=>"2.0","id"=>1,"method"=>"echo","p
   ->content_type_is('application/json; charset=utf-8')
   ->status_is(200);
 
+# 2.0 via the direct render_later pattern: a method that calls
+# renderJsonRpcResult itself (not via a promise) must still emit a 2.0
+# envelope -- the protocol mode is read from the private instance field.
+$t->post_ok('/root/jsonrpc', json => {jsonrpc=>"2.0","id"=>1,"method"=>"async","params"=>["hello"]})
+  ->json_is('',{jsonrpc=>"2.0",id=>1,result=>'Delayed hello for 1.5 seconds!'},'2.0 direct render_later success');
+
+# 2.0 via direct render_later, error side (renderJsonRpcError called directly)
+$t->post_ok('/root/jsonrpc', json => {jsonrpc=>"2.0","id"=>1,"method"=>"asyncException","params"=>[]})
+  ->json_is('',{jsonrpc=>"2.0",id=>1,error=>{code=>334,message=>'a simple error',data=>{origin=>2}}},'2.0 direct render_later error');
+
 done_testing();
 
 exit 0;

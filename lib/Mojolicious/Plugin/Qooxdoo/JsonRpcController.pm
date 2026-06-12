@@ -25,9 +25,6 @@ has 'methodName';
 
 has 'rpcParams';
 
-# true when the current request used the JSON-RPC 2.0 envelope
-has 'jsonRpc20';
-
 sub dispatch {
     my $self = shift;
     
@@ -87,8 +84,11 @@ sub dispatch {
         return;
     }        
     # Detect protocol: a 'jsonrpc' member selects strict JSON-RPC 2.0;
-    # its absence keeps the legacy qooxdoo "qx1" behaviour intact.
-    $self->jsonRpc20(defined $data->{jsonrpc} ? 1 : 0);
+    # its absence keeps the legacy qooxdoo "qx1" behaviour intact. Stored as a
+    # private instance field (no 'has' accessor) so it is not part of the
+    # public interface, yet the public render methods can still read it when a
+    # subclass calls them directly (e.g. from a render_later callback).
+    $self->{_jsonRpc20} = defined $data->{jsonrpc} ? 1 : 0;
 
     if (not defined $self->requestId){
         my $error = "Missing 'id' property in JsonRPC request.";
@@ -98,7 +98,7 @@ sub dispatch {
     }
 
     my $method;
-    if ($self->jsonRpc20) {
+    if ($self->{_jsonRpc20}) {
         # --- JSON-RPC 2.0 ---
         if ($data->{jsonrpc} ne '2.0') {
             my $error = "Invalid 'jsonrpc' version (must be \"2.0\").";
@@ -153,7 +153,7 @@ sub dispatch {
             origin => 1,
             message => "service ".$data->{service}." not available",
             code=> 2
-        } if not $self->jsonRpc20 and not $self->service eq $data->{service};
+        } if not $self->{_jsonRpc20} and not $self->service eq $data->{service};
 
         die {
              origin => 1, 
@@ -234,7 +234,7 @@ sub logRpcCall {
 sub renderJsonRpcResult {
     my $self = shift;
     my $data = shift;
-    my $reply = $self->jsonRpc20
+    my $reply = $self->{_jsonRpc20}
         ? { jsonrpc => '2.0', id => $self->requestId, result => $data }
         : {                   id => $self->requestId, result => $data };
     $self->logRpcReturn(dclone($reply));
@@ -279,7 +279,7 @@ sub renderJsonRpcError {
     $self->log->error("JsonRPC error sent to client: '" . ($code // 'undef') . ": $message'");
 
     my $reply;
-    if ($self->jsonRpc20) {
+    if ($self->{_jsonRpc20}) {
         # JSON-RPC 2.0: error.code must be an integer; non-standard 'origin'
         # is carried inside the permitted 'data' member.
         $reply = {
